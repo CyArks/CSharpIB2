@@ -1,7 +1,10 @@
 using System;
+using System.Collections.Generic;
+using System.Runtime.CompilerServices;
+using System.Security.Cryptography.X509Certificates;
 
 /**\mainpage
- * Ein Projekt von Florian Manhartseder
+ * Ein Projekt von Florian Manhartseder\n
  * Dieses Projekt implementiert eine Simulation verschiedener Tiere im Zoo-Kontext,
  * einschließlich ihrer Verhaltensweisen und Eigenschaften.
  */
@@ -36,6 +39,8 @@ namespace Zoo
      */
     internal class Program
     {
+        private static List<Tier> tiere = new List<Tier>();
+
         /**\class Tier
          * Basis-Klasse für alle Tiere im Zoo.
          */
@@ -109,6 +114,12 @@ namespace Zoo
                 Console.WriteLine("Das Tier isst!");
             }
 
+            public virtual void SteckbriefAusgeben()
+            {
+                Console.WriteLine("Name: " + name);
+                Console.WriteLine("Gewicht: " + gewicht);
+                Console.WriteLine("Alter: " + alter);
+            }
         }
 
 
@@ -170,6 +181,14 @@ namespace Zoo
             public override void essen()
             {
                 Console.WriteLine("Das Wassertier isst...");
+            }
+
+            public override void SteckbriefAusgeben()
+            {
+                // ToDo: Steckbrief Ausgabe fertig programmieren
+                Console.WriteLine("Klasse: " + typeof(Wassertier));
+                Console.WriteLine("Tauchzeit: " + tauchzeit);
+                base.SteckbriefAusgeben();
             }
         }
 
@@ -269,7 +288,6 @@ namespace Zoo
             {
                 Console.WriteLine("Der Wal schwimmt...");
             }
-
 
             /**\fn
              * Implementiert das Essverhalten des Wals.
@@ -468,7 +486,203 @@ namespace Zoo
              * @code cs
              **/
 
-            Wassertier Wal = new Wassertier("Wally", 1000000, -3);
+            int ErweitertesMenuAnzeigen()
+            {
+                Console.WriteLine("-------------- Spezifisches Menü --------------");
+                Console.WriteLine(" 1. Instanz von Wal erstellen");
+                Console.WriteLine(" 2. Instanz von Delfin erstellen");
+                Console.WriteLine(" 3. Instanz von Elefant erstellen");
+                Console.WriteLine(" 4. Instanz von Nashorn erstellen");
+                Console.WriteLine(" 5. Eingabe beenden");
+                Console.WriteLine("\n");
+
+                Console.WriteLine("Wählen Sie eine Option aus: ");
+                return Convert.ToInt32(Console.ReadLine());
+            }
+
+            int MenuAnzeigen()
+            {
+                Console.WriteLine("-------------- Allgemeines Menü --------------");
+                Console.WriteLine(" 1. Instanz von Landtier erstellen");
+                Console.WriteLine(" 2. Instanz von Wassertier erstellen");
+                Console.WriteLine(" 3. Erweitertes Menü anzeigen");
+                Console.WriteLine("\n");
+
+                Console.WriteLine("Wählen Sie eine Option aus: ");
+                return Convert.ToInt32(Console.ReadLine());
+            }
+
+            Wal ErstelleWal()
+            {
+                Console.Write("Name des Wals: ");
+                string name = Console.ReadLine();
+                Console.Write("Gewicht des Wals: ");
+                int gewicht = Convert.ToInt32(Console.ReadLine());
+                Console.Write("Alter des Wals: ");
+                int alter = Convert.ToInt32(Console.ReadLine());
+                Console.Write("Gattung des Wals: ");
+                string gattung = Console.ReadLine();
+
+                Wal wal = new Wal(name, gewicht, alter, gattung);
+                wal.schlafen();
+                wal.bewegen();
+                wal.essen();
+                Console.WriteLine("Wal erstellt: " + name);
+                return wal;
+            }
+
+            Elefant ErstelleElefant()
+            {
+                Console.Write("Name des Elefanten: ");
+                string name = Console.ReadLine();
+                Console.Write("Gewicht des Elefanten: ");
+                int gewicht = Convert.ToInt32(Console.ReadLine());
+                Console.Write("Alter des Elefanten: ");
+                int alter = Convert.ToInt32(Console.ReadLine());
+                Console.Write("Geschwindigkeit des Elefanten: ");
+                int geschwindigkeit = Convert.ToInt32(Console.ReadLine());
+                Console.Write("Lieblingsfutter des Elefanten: ");
+                string lieblingsFutter = Console.ReadLine();
+
+                Elefant elefant = new Elefant(name, gewicht, alter, geschwindigkeit, lieblingsFutter);
+                elefant.schlafen();
+                elefant.bewegen();
+                elefant.essen();
+                Console.WriteLine("Elefant erstellt: " + name);
+                return elefant;
+            }
+
+            Nashorn ErstelleNashorn()
+            {
+                Console.Write("Name des Nashorns: ");
+                string name = Console.ReadLine();
+                Console.Write("Gewicht des Nashorns: ");
+                int gewicht = Convert.ToInt32(Console.ReadLine());
+                Console.Write("Alter des Nashorns: ");
+                int alter = Convert.ToInt32(Console.ReadLine());
+                Console.Write("Geschwindigkeit des Nashorns: ");
+                int geschwindigkeit = Convert.ToInt32(Console.ReadLine());
+                Console.Write("Hornlänge des Nashorns: ");
+                int hornLaenge = Convert.ToInt32(Console.ReadLine());
+
+                Nashorn nashorn = new Nashorn(name, gewicht, alter, geschwindigkeit, hornLaenge);
+                nashorn.schlafen();
+                nashorn.bewegen();
+                nashorn.essen();
+                Console.WriteLine("Nashorn erstellt: " + name);
+                return nashorn;
+            }
+
+            Delfin ErstelleDelfin()
+            {
+                Console.Write("Name des Delfins: ");
+                string name = Console.ReadLine();
+                Console.Write("Gewicht des Delfins: ");
+                int gewicht = Convert.ToInt32(Console.ReadLine());
+                Console.Write("Alter des Delfins: ");
+                int alter = Convert.ToInt32(Console.ReadLine());
+                Console.Write("Art des Delfins: ");
+                string art = Console.ReadLine();
+
+                Delfin delfin = new Delfin(name, gewicht, alter, art);
+                delfin.schlafen();
+                delfin.bewegen();
+                delfin.essen();
+                Console.WriteLine("Delfin erstellt: " + name);
+                return delfin;
+            }
+
+            Landtier ErstelleLandtier()
+            {
+                Console.Write("Name des Landtiers: ");
+                string name = Console.ReadLine();
+                Console.Write("Gewicht des Landtiers: ");
+                int gewicht = Convert.ToInt32(Console.ReadLine());
+                Console.Write("Alter des Landtiers: ");
+                int alter = Convert.ToInt32(Console.ReadLine());
+                Console.Write("Geschwindigkeit des Landtiers: ");
+                int geschwindigkeit = Convert.ToInt32(Console.ReadLine());
+
+                Landtier landtier = new Landtier(name, gewicht, alter, geschwindigkeit);
+                landtier.schlafen();
+                landtier.bewegen();
+                landtier.essen();
+                Console.WriteLine("Landtier erstellt: " + name);
+                return landtier;
+            }
+
+            Wassertier ErstelleWassertier()
+            {
+                Console.Write("Name des Wassertiers: ");
+                string name = Console.ReadLine();
+                Console.Write("Gewicht des Wassertiers: ");
+                int gewicht = Convert.ToInt32(Console.ReadLine());
+                Console.Write("Alter des Wassertiers: ");
+                int alter = Convert.ToInt32(Console.ReadLine());
+                Console.Write("Tauchzeit des Wassertiers: ");
+                int tauchzeit = Convert.ToInt32(Console.ReadLine());
+
+                Wassertier wassertier = new Wassertier(name, gewicht, alter);
+                wassertier.setTauchzeit(tauchzeit);
+                wassertier.schlafen();
+                wassertier.bewegen();
+                wassertier.essen();
+                Console.WriteLine("Wassertier erstellt: " + name);
+                return wassertier;
+            }
+
+            while (true)
+            {
+                int feedback = MenuAnzeigen();
+
+                if (feedback == 3)
+                {
+                    int option = ErweitertesMenuAnzeigen();
+                    switch (option)
+                    {
+                        case 1:
+                            tiere.Add(ErstelleWal());
+                            break;
+                        case 2:
+                            tiere.Add(ErstelleDelfin());
+                            break;
+                        case 3:
+                            tiere.Add(ErstelleElefant());
+                            break;
+                        case 4:
+                            tiere.Add(ErstelleNashorn());
+                            break;
+                        case 5:
+                            foreach (var tier in tiere)
+                            {
+                                tier.SteckbriefAusgeben();
+                            }
+                            return;
+                        default:
+                            Console.WriteLine("Ungültige Option.");
+                            break;
+                    }
+                }
+                else if (feedback == 1 || feedback == 2)
+                {
+                    if (feedback == 1) 
+                    {
+                        tiere.Add(ErstelleLandtier());
+                    }
+                    else
+                    {
+                        tiere.Add(ErstelleWassertier());
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("Ungültige Option.");
+                }
+            }
+
+
+        /*
+        Wassertier Wal = new Wassertier("Wally", 1000000, -3);
             Wal.schlafen();
             // "Der Wal schläft"
             Wal.bewegen();
@@ -491,6 +705,7 @@ namespace Zoo
             // "Das Wassertier schläft"
 
             Console.ReadLine();
+        */
 
         }
     }
