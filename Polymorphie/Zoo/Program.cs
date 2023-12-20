@@ -114,6 +114,10 @@ namespace Zoo
                 Console.WriteLine("Das Tier isst!");
             }
 
+            /**\fn
+            * Implementiert die Ausgabe eines Steckbriefes
+            * @return void
+            */
             public virtual void SteckbriefAusgeben()
             {
                 Console.WriteLine("Name: " + name);
@@ -183,9 +187,12 @@ namespace Zoo
                 Console.WriteLine("Das Wassertier isst...");
             }
 
+            /**\fn
+            * Implementiert die Ausgabe eines Steckbriefes
+            * @return void
+            */
             public override void SteckbriefAusgeben()
             {
-                // ToDo: Steckbrief Ausgabe fertig programmieren
                 Console.WriteLine("Klasse: " + typeof(Wassertier));
                 Console.WriteLine("Tauchzeit: " + tauchzeit);
                 base.SteckbriefAusgeben();
@@ -256,6 +263,17 @@ namespace Zoo
             {
                 Console.WriteLine("Das Landtier schläft...");
             }
+
+            /**\fn
+            * Implementiert die Ausgabe eines Steckbriefes
+            * @return void
+            */
+            public override void SteckbriefAusgeben()
+            {
+                Console.WriteLine("Klasse: " + typeof(Landtier));
+                Console.WriteLine("Geschwindigkeit: " + geschwindigkeit);
+                base.SteckbriefAusgeben();
+            }
         }
 
 
@@ -274,9 +292,10 @@ namespace Zoo
             * @param alter Alter des Wals.
             * @param gattung Gattung des Wals.
             */
-            public Wal(string name, int gewicht, int alter, string gattung) : base(name, gewicht, alter)
+            public Wal(string name, int gewicht, int alter, string gattung, int tauchzeit) : base(name, gewicht, alter)
             {
                 this.gattung = gattung;
+                base.setTauchzeit(tauchzeit);
             }
 
             /**\fn
@@ -307,6 +326,17 @@ namespace Zoo
             public override void schlafen()
             {
                 Console.WriteLine("Der Wal schläft...");
+            }
+
+            /**\fn
+            * Implementiert die Ausgabe eines Steckbriefes
+            * @return void
+            */
+            public override void SteckbriefAusgeben()
+            {
+                Console.WriteLine("Klasse: " + typeof(Wal));
+                Console.WriteLine("Gattung: " + gattung);
+                base.SteckbriefAusgeben();
             }
         }
 
@@ -360,6 +390,17 @@ namespace Zoo
             public override void schlafen()
             {
                 Console.WriteLine("Der Delfin schläft...");
+            }
+
+            /**\fn
+            * Implementiert die Ausgabe eines Steckbriefes
+            * @return void
+            */
+            public override void SteckbriefAusgeben()
+            {
+                Console.WriteLine("Klasse: " + typeof(Delfin));
+                Console.WriteLine("Art: " + art);
+                base.SteckbriefAusgeben();
             }
         }
 
@@ -415,6 +456,17 @@ namespace Zoo
             {
                 Console.WriteLine("Der Elefant schläft...");
             }
+
+            /**\fn
+            * Implementiert die Ausgabe eines Steckbriefes
+            * @return void
+            */
+            public override void SteckbriefAusgeben()
+            {
+                Console.WriteLine("Klasse: " + typeof(Elefant));
+                Console.WriteLine("Lieblingsfutter: " + lieblingsFutter);
+                base.SteckbriefAusgeben();
+            }
         }
 
 
@@ -469,6 +521,17 @@ namespace Zoo
             {
                 Console.WriteLine("Das Nashorn schläft...");
             }
+
+            /**\fn
+            * Implementiert die Ausgabe eines Steckbriefes
+            * @return void
+            */
+            public override void SteckbriefAusgeben()
+            {
+                Console.WriteLine("Klasse: " + typeof(Nashorn));
+                Console.WriteLine("Hornlänge: " + hornLaenge);
+                base.SteckbriefAusgeben();
+            }
         }
 
 
@@ -486,26 +549,36 @@ namespace Zoo
              * @code cs
              **/
 
+            /**\fn
+            * Implementiert die Ausgabe eines erweiterten Menüs
+            * @return int
+            */
             int ErweitertesMenuAnzeigen()
             {
-                Console.WriteLine("-------------- Spezifisches Menü --------------");
+                Console.WriteLine("\n\n-------------- Spezifisches Menü --------------");
                 Console.WriteLine(" 1. Instanz von Wal erstellen");
                 Console.WriteLine(" 2. Instanz von Delfin erstellen");
                 Console.WriteLine(" 3. Instanz von Elefant erstellen");
                 Console.WriteLine(" 4. Instanz von Nashorn erstellen");
-                Console.WriteLine(" 5. Eingabe beenden");
+                Console.WriteLine(" 5. Eingabe beenden und Steckbriefe ausgeben");
+                Console.WriteLine("-----------------------------------------------");
                 Console.WriteLine("\n");
 
                 Console.WriteLine("Wählen Sie eine Option aus: ");
                 return Convert.ToInt32(Console.ReadLine());
             }
 
+            /**\fn
+            * Implementiert die Ausgabe eines allgemeinen Menüs
+            * @return int
+            */
             int MenuAnzeigen()
             {
-                Console.WriteLine("-------------- Allgemeines Menü --------------");
+                Console.WriteLine("\n\n--------------- Allgemeines Menü ---------------");
                 Console.WriteLine(" 1. Instanz von Landtier erstellen");
                 Console.WriteLine(" 2. Instanz von Wassertier erstellen");
                 Console.WriteLine(" 3. Erweitertes Menü anzeigen");
+                Console.WriteLine("------------------------------------------------");
                 Console.WriteLine("\n");
 
                 Console.WriteLine("Wählen Sie eine Option aus: ");
@@ -522,8 +595,10 @@ namespace Zoo
                 int alter = Convert.ToInt32(Console.ReadLine());
                 Console.Write("Gattung des Wals: ");
                 string gattung = Console.ReadLine();
+                Console.Write("Tauchzeit des Wals: ");
+                int tauchzeit = Convert.ToInt32(Console.ReadLine());
 
-                Wal wal = new Wal(name, gewicht, alter, gattung);
+                Wal wal = new Wal(name, gewicht, alter, gattung, tauchzeit);
                 wal.schlafen();
                 wal.bewegen();
                 wal.essen();
@@ -657,6 +732,9 @@ namespace Zoo
                             {
                                 tier.SteckbriefAusgeben();
                             }
+
+                            Console.ReadLine();
+
                             return;
                         default:
                             Console.WriteLine("Ungültige Option.");
