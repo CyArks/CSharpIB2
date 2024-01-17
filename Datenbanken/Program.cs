@@ -1,5 +1,6 @@
 using System;
 using System.Data.Entity.ModelConfiguration.Configuration;
+using System.Web;
 using MySql.Data.MySqlClient;
 
 // Skript um eine Verbindung zur Fahrrad Datenbank herzustellen
@@ -7,6 +8,11 @@ using MySql.Data.MySqlClient;
 
 namespace DatabaseOperations
 {
+    public class Logger
+    {
+        public static readonly Logger Instance = new Logger();
+    }
+
     public class Database
     {
         private MySqlConnection _connection;
@@ -31,13 +37,16 @@ namespace DatabaseOperations
             // Verbindung herstellen
             try
             {
+                Console.ForegroundColor = ConsoleColor.DarkYellow;
                 Console.WriteLine("Connection is being established...");
                 _connection.Open();
                 Console.WriteLine("Sucessfuly connected.\n");
+                Console.ForegroundColor= ConsoleColor.White;
             }
             // Fehler beim Verbindungsaufbau abfangen
             catch (Exception ex)
             {
+                Console.ForegroundColor = ConsoleColor.Red;
                 Console.WriteLine("Exception while connecting to DB ocurred: " + ex.Message);
                 System.Environment.Exit(1);
             }
@@ -49,6 +58,7 @@ namespace DatabaseOperations
             string query = $"SELECT {columns} FROM {table}";
             query = where == "" ? query : query + " WHERE " + where;
 
+            Console.ForegroundColor = ConsoleColor.DarkYellow;
             Console.WriteLine($"Running select: SELECT {columns} FROM {database}...");
 
             MySqlCommand cmd = new MySqlCommand(query, _connection);
@@ -62,12 +72,18 @@ namespace DatabaseOperations
             TimeSpan deltaT = endDateTime - startDateTime;
 
             Console.WriteLine($"Select finished in {deltaT.Milliseconds}ms!\n");
+            Console.ForegroundColor = ConsoleColor.White;
 
             return _reader;
         }
 
         public void prettyPrintResponse()
         {
+            List<string> columnNames = new List<string>();
+            List<int> colWidths = new List<int>();
+            List<List<object>> rows = new List<List<object>>();
+            int spacing = 2; // Defines the spacing between the columns
+
             // Cursor auf Inhalt prüfen
             if (_reader == null || !_reader.HasRows)
             {
@@ -75,22 +91,80 @@ namespace DatabaseOperations
                 return;
             }
 
-            // Spaltennamen dynamisch ausgeben
+            // Spaltennamen lesen
             for (int i = 0; i < _reader.FieldCount; i++)
             {
-                Console.Write($"{_reader.GetName(i)}\t\t");
+                string colName = _reader.GetName(i);
+                columnNames.Add(colName);
+                colWidths.Add(colName.Length);
             }
-            Console.WriteLine();
 
-            // Daten ausgeben
+            // Values speichern
             while (_reader.Read())
             {
+                List<object> row = new List<object>();
                 for (int i = 0; i < _reader.FieldCount; i++)
                 {
-                    Console.Write($"{_reader.GetValue(i)}\t\t");
+                    object value = _reader.GetValue(i);
+                    int valueLength = value.ToString().Length;
+                    row.Add(value);
+
+                    if (colWidths[i] < valueLength)
+                    {
+                        colWidths[i] = valueLength;
+                    }
+                }
+                rows.Add(row);
+            }
+
+            /*
+            foreach (var start in colWidths.Zip(dataStart, (a, b) => new { A = a, B = b}))
+            {
+                int biggest = (int)start.A;
+                if (start.A < start.B)
+                {
+                    biggest = (int)start.B;
+                }
+                starts.Add(biggest);
+            }
+            
+            
+            // Craft a list with the linestarts
+            int linestart = 0;
+            finalLineStarts.Add(0);
+            foreach (int linenumber in starts)
+            {
+                linestart += linenumber;
+                finalLineStarts.Add(linestart);
+            }
+            */
+
+            // print columns
+            for (int i = 0; i < columnNames.Count; i++)
+            {
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.Write(columnNames[i].PadRight(colWidths[i] + spacing) + "|  ");
+            }
+            Console.WriteLine();
+            Console.WriteLine(new String('-', colWidths.Sum() + 2 * spacing * colWidths.Count + 2 * spacing) + '|');
+
+            Console.ForegroundColor = ConsoleColor.White;
+
+            int y = 0;
+            // print rows
+            foreach (var row in rows)
+            {
+                if (y % 2 == 0) Console.ForegroundColor = ConsoleColor.Gray;
+                else            Console.ForegroundColor = ConsoleColor.DarkGray;
+
+                for (int i = 0; i < row.Count; i++)
+                {
+                    Console.Write(row[i].ToString().PadRight(colWidths[i] + spacing) + "|  ");
                 }
                 Console.WriteLine();
+                y++;
             }
+            Console.ForegroundColor = ConsoleColor.White;
 
             // Cursor schließen
             _reader.Close();
@@ -104,10 +178,18 @@ namespace DatabaseOperations
                 throw new Exception("Number of data fields does not equal number of columns!");
             }
 
+            Console.ForegroundColor = ConsoleColor.DarkYellow;
             Console.WriteLine($"Inserting data into {table}");
 
             string joinedCols = string.Join(", ", columns);
-            string joinedParams = "@" + string.Join(", @", data);
+            string[] paramPlaceholders = new string[columns.Length];
+
+            for (int i = 0; i < columns.Length; i++)
+            {
+                paramPlaceholders[i] = '@' + columns[i];
+            }
+
+            string joinedParams = string.Join(", ", paramPlaceholders);
             string query = $"INSERT INTO {table} ({joinedCols}) VALUES ({joinedParams})";
 
             try
@@ -125,18 +207,25 @@ namespace DatabaseOperations
 
                     DateTime endDateTime = DateTime.Now;
                     TimeSpan deltaT = endDateTime - startDateTime;
-                    Console.WriteLine($"Insert sucessfuly finished in {deltaT.Milliseconds}ms!\n");
-                    Console.WriteLine($"{affectedRows} Rows affected!");
+                    Console.WriteLine($"Insert sucessfuly finished in {deltaT.Milliseconds}ms!");
+                    Console.WriteLine($"{affectedRows} Row(s) affected!\n");
                 }
             }
             catch (Exception ex)
             {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine(ex);
                 Console.WriteLine($"Error during inserting data in table {table}: {ex.Message}");
+            }
+            finally
+            {
+                Console.ForegroundColor = ConsoleColor.White;
             }
         }
 
         public void updateData(string table, string[] column, string where, object[] data)
         {
+            Console.ForegroundColor = ConsoleColor.Yellow;
             Console.WriteLine($"Updating column {column} in table {table} where {where} with data: {data}");
 
             string joinedCols = string.Join(", ", column);
@@ -163,15 +252,30 @@ namespace DatabaseOperations
             }
             catch (Exception ex)
             {
+                Console.ForegroundColor = ConsoleColor.Red;
                 Console.WriteLine($"Error during update of table {table}: {ex.Message}");
             }
+            Console.ForegroundColor = ConsoleColor.White;
         }
 
+        public void deleteData()
+        {
+            Console.WriteLine();
+        }
+
+        public string[] getColumnsFromTable()
+        {
+            string[] ColumnNames = { "" };
+            return ColumnNames;
+        }
 
         ~Database()
         {
-            // Datenbankverbindung schließen
+            Console.ForegroundColor = ConsoleColor.Blue;
             Console.WriteLine("Connection is being closed...");
+            Console.ForegroundColor = ConsoleColor.White;
+
+            // Datenbankverbindung schließen
             _connection.Close();
         }
     }
@@ -183,13 +287,40 @@ namespace DatabaseOperations
         {
             Database database = new Database("fahrrad");
 
-            database.runSelectQuery("fahrrad", "*");
+            database.runSelectQuery("fahrrad", "*", "Fahrradnr >= 400");
             database.prettyPrintResponse();
 
+            Console.WriteLine("\n\n");
+
+            database.runSelectQuery("fahrrad", "*", "Herstellernr = 24");
+            database.prettyPrintResponse();
+
+            Console.WriteLine("\n\n");
+
+            string[] columns = { "Fahrradnr", "Bezeichnung", "Rahmennummer", "Tagesmietpreis", "Wert", "Kaufdatum", "Herstellernr" };
+            object[] data = { 420, "Citybike", "IK23HJ4", 14.5, 499.99, DateTime.Now, 24 };
+
+            database.insertData("fahrrad", columns, data);
+
+            Console.WriteLine("\n\n");
+
+            object[] data1 = { "MyCityBike" };
+            string[] colss = { "Bezeichnung" };
+
+            database.updateData("fahrrad", colss, "Fahrradnr = 420", data1);
+
+            Console.WriteLine("\n\n");
+
+            database.runSelectQuery("fahrrad", "*", "Fahrradnr >= 400");
+            database.prettyPrintResponse();
+
+            Console.WriteLine("\n\n");
+
+
             // Create or use log database
-            // write all database operations in log database
+            // write all database operations in log table
 
-
+            Console.ReadLine();
         }
     }
 }
