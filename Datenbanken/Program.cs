@@ -3,6 +3,7 @@ using System.Data.Entity.ModelConfiguration.Configuration;
 using System.Web;
 using MySql.Data.MySqlClient;
 
+
 // Skript um eine Verbindung zur Fahrrad Datenbank herzustellen
 // Author: Florian Manhartseder
 
@@ -23,7 +24,7 @@ namespace DatabaseOperations
         private string port;
         private string server;
 
-        public Database(string database, string user="root", string server="localhost", string port="3306", string password="") 
+        public Database(string database, string user = "root", string server = "localhost", string port = "3306", string password = "")
         {
             this.database = database;
             this.user = user;
@@ -41,7 +42,7 @@ namespace DatabaseOperations
                 Console.WriteLine("Connection is being established...");
                 _connection.Open();
                 Console.WriteLine("Sucessfuly connected.\n");
-                Console.ForegroundColor= ConsoleColor.White;
+                Console.ForegroundColor = ConsoleColor.White;
             }
             // Fehler beim Verbindungsaufbau abfangen
             catch (Exception ex)
@@ -52,7 +53,7 @@ namespace DatabaseOperations
             }
         }
 
-        public MySqlDataReader runSelectQuery(string table, string columns="*", string where="")
+        public async Task<MySqlDataReader> runSelectQueryAsync(string table, string columns = "*", string where = "")
         {
             columns = columns == "" ? "*" : columns;
             string query = $"SELECT {columns} FROM {table}";
@@ -63,21 +64,31 @@ namespace DatabaseOperations
 
             MySqlCommand cmd = new MySqlCommand(query, _connection);
 
-            // Query ausführen
-            DateTime startDateTime = DateTime.Now;
-            _reader = cmd.ExecuteReader();
-            DateTime endDateTime = DateTime.Now;
+            try
+            {
+                // Query ausführen
+                DateTime startDateTime = DateTime.Now;
+                MySqlDataReader reader = (MySqlDataReader) await cmd.ExecuteReaderAsync();
+                DateTime endDateTime = DateTime.Now;
 
-            // Ausführungsdauer berechnen
-            TimeSpan deltaT = endDateTime - startDateTime;
+                // Ausführungsdauer berechnen
+                TimeSpan deltaT = endDateTime - startDateTime;
 
-            Console.WriteLine($"Select finished in {deltaT.Milliseconds}ms!\n");
-            Console.ForegroundColor = ConsoleColor.White;
+                Console.WriteLine($"Select finished in {deltaT.Milliseconds}ms!\n");
+                Console.ForegroundColor = ConsoleColor.White;
 
-            return _reader;
+                return reader;
+            }
+            catch (Exception ex)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine("Exception while executing select query: " + ex.Message);
+                Console.ForegroundColor = ConsoleColor.White;
+                throw;
+            }   
         }
 
-        public void prettyPrintResponse()
+        public void prettyPrintResponse(MySqlDataReader reader)
         {
             List<string> columnNames = new List<string>();
             List<int> colWidths = new List<int>();
@@ -85,27 +96,27 @@ namespace DatabaseOperations
             int spacing = 2; // Defines the spacing between the columns
 
             // Cursor auf Inhalt prüfen
-            if (_reader == null || !_reader.HasRows)
+            if (reader == null || !reader.HasRows)
             {
                 Console.WriteLine("No data found!");
                 return;
             }
 
             // Spaltennamen lesen
-            for (int i = 0; i < _reader.FieldCount; i++)
+            for (int i = 0; i < reader.FieldCount; i++)
             {
-                string colName = _reader.GetName(i);
+                string colName = reader.GetName(i);
                 columnNames.Add(colName);
                 colWidths.Add(colName.Length);
             }
 
             // Values speichern
-            while (_reader.Read())
+            while (reader.Read())
             {
                 List<object> row = new List<object>();
-                for (int i = 0; i < _reader.FieldCount; i++)
+                for (int i = 0; i < reader.FieldCount; i++)
                 {
-                    object value = _reader.GetValue(i);
+                    object value = reader.GetValue(i);
                     int valueLength = value.ToString().Length;
                     row.Add(value);
 
@@ -155,7 +166,7 @@ namespace DatabaseOperations
             foreach (var row in rows)
             {
                 if (y % 2 == 0) Console.ForegroundColor = ConsoleColor.Gray;
-                else            Console.ForegroundColor = ConsoleColor.DarkGray;
+                else Console.ForegroundColor = ConsoleColor.DarkGray;
 
                 for (int i = 0; i < row.Count; i++)
                 {
@@ -165,12 +176,13 @@ namespace DatabaseOperations
                 y++;
             }
             Console.ForegroundColor = ConsoleColor.White;
+            Console.WriteLine(new String('-', colWidths.Sum() + 2 * spacing * colWidths.Count + 2 * spacing) + '|');
 
             // Cursor schließen
-            _reader.Close();
+            reader.Close();
         }
 
-        public void insertData(string table, string[] columns, object[] data)
+        public async Task insertDataAsync(string table, string[] columns, object[] data)
         {
             // Check if number of columns matches data length
             if (columns.Length != data.Length)
@@ -203,7 +215,7 @@ namespace DatabaseOperations
                     }
 
                     DateTime startDateTime = DateTime.Now;
-                    int affectedRows = cmd.ExecuteNonQuery();
+                    int affectedRows = await cmd.ExecuteNonQueryAsync();
 
                     DateTime endDateTime = DateTime.Now;
                     TimeSpan deltaT = endDateTime - startDateTime;
@@ -265,6 +277,7 @@ namespace DatabaseOperations
 
         public string[] getColumnsFromTable()
         {
+            // ToDo: Implement
             string[] ColumnNames = { "" };
             return ColumnNames;
         }
@@ -283,24 +296,24 @@ namespace DatabaseOperations
 
     class Prog
     {
-        public static void Main()
+        public static async Task Main()
         {
             Database database = new Database("fahrrad");
 
-            database.runSelectQuery("fahrrad", "*", "Fahrradnr >= 400");
-            database.prettyPrintResponse();
+            var fahrrad = await database.runSelectQueryAsync("fahrrad", "*");
+            database.prettyPrintResponse(fahrrad);
 
             Console.WriteLine("\n\n");
-
-            database.runSelectQuery("fahrrad", "*", "Herstellernr = 24");
-            database.prettyPrintResponse();
+           
+            var Herstellernr24 = await database.runSelectQueryAsync("fahrrad", "*", "Herstellernr = 24");
+            database.prettyPrintResponse(Herstellernr24);
 
             Console.WriteLine("\n\n");
 
             string[] columns = { "Fahrradnr", "Bezeichnung", "Rahmennummer", "Tagesmietpreis", "Wert", "Kaufdatum", "Herstellernr" };
-            object[] data = { 420, "Citybike", "IK23HJ4", 14.5, 499.99, DateTime.Now, 24 };
+            object[] data = { 425, "Citybike", "IK23HJ4", 14.5, 499.99, DateTime.Now, 24 };
 
-            database.insertData("fahrrad", columns, data);
+            await database.insertDataAsync("fahrrad", columns, data);
 
             Console.WriteLine("\n\n");
 
@@ -311,14 +324,17 @@ namespace DatabaseOperations
 
             Console.WriteLine("\n\n");
 
-            database.runSelectQuery("fahrrad", "*", "Fahrradnr >= 400");
-            database.prettyPrintResponse();
+            var fahrradnrGreater400 = await database.runSelectQueryAsync("fahrrad", "*", "Fahrradnr >= 400");
+            database.prettyPrintResponse(fahrradnrGreater400);
 
             Console.WriteLine("\n\n");
 
 
-            // Create or use log database
-            // write all database operations in log table
+            // ToDo:
+            // Create log DB
+            // Write all database operations in log table
+            // Create html page to run and view queries
+
 
             Console.ReadLine();
         }
