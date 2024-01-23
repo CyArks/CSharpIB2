@@ -1,0 +1,83 @@
+using System.Text.RegularExpressions;
+using System.IO;
+
+
+string text = "";
+string datePattern = @"\d{2}\.\d{2}\.\d{4}";
+string telefonPattern = @"\+\d{1,3}\s\(\d{3}\)\s\d{3}-\d{4}"; ;
+string ipAddressPattern = @"(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})";
+string emailAddressPattern = @"\b[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}\b";
+
+string outputPath = "C:\\Users\\F.Manhartseder\\source\\repos\\RegExUebung\\RegExUebung\\output.txt";
+string inputPath = "C:\\Users\\F.Manhartseder\\source\\repos\\RegExUebung\\input.txt";
+
+
+// Read the input file
+StreamReader reader = new StreamReader(inputPath);
+text = reader.ReadToEnd();
+reader.Close();
+
+// Print the input file
+Console.WriteLine(text);
+
+
+// Match all patterns
+MatchCollection phonenumberMatches = Regex.Matches(text, telefonPattern, RegexOptions.IgnoreCase);
+MatchCollection dateMatches = Regex.Matches(text, datePattern, RegexOptions.IgnoreCase);
+MatchCollection ipAddressMatches = Regex.Matches(text, ipAddressPattern, RegexOptions.IgnoreCase);
+MatchCollection emailAddressMatches = Regex.Matches(text, emailAddressPattern, RegexOptions.IgnoreCase);
+
+
+// Delte the old ouput file if it exists
+if (File.Exists(outputPath))
+{
+    File.Delete(outputPath);
+}
+
+// Open a FileStream to the output file
+FileStream outFile = new FileStream(outputPath, System.IO.FileMode.OpenOrCreate);
+
+
+void WriteHeader(string matchPattern, FileStream outFile)
+{
+    string header = $"<----  {matchPattern}  ---->\n";
+    byte[] headerBytes = System.Text.Encoding.UTF8.GetBytes(header);
+    outFile.Write(headerBytes);
+}
+
+void WriteMatches(MatchCollection matches, FileStream outFile)
+{
+    foreach (Match match in matches)
+    {
+        string line = "Original position: " + match.Index.ToString() + " - Text found: " + match + "\n";
+        byte[] writeBuffer = System.Text.Encoding.UTF8.GetBytes(line);
+        outFile.Write(writeBuffer);
+    }
+}
+
+void WriteFooter(FileStream outFile)
+{
+    string footer = "<---- END ---->\n\n\n";
+    byte[] footerBytes = System.Text.Encoding.UTF8.GetBytes(footer);
+    outFile.Write(footerBytes);
+}
+
+
+// Write pattern matches to output file
+WriteHeader("Phonenumbers", outFile);
+WriteMatches(phonenumberMatches, outFile);
+WriteFooter(outFile);
+
+WriteHeader("Dates", outFile);
+WriteMatches(dateMatches, outFile);
+WriteFooter(outFile);
+
+WriteHeader("IP-Addresses", outFile);
+WriteMatches(ipAddressMatches, outFile);
+WriteFooter(outFile);
+
+WriteHeader("Email-Addresses", outFile);
+WriteMatches(emailAddressMatches, outFile);
+WriteFooter(outFile);
+
+outFile.Close();
